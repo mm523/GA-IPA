@@ -32,7 +32,7 @@ function datareader(protfile::String, La::Int64, Lb::Int64)
     #The first step is to import the dataset. For AF datasets, first and last sequences are dummies.
 
     jointAB = readfasta(protfile)
-	M = length(jointAB) - 2 #M is the number of sequences in the concatenated HK-RR protein. irst and last are dummies.
+	M = length(jointAB) - 2 #M is the number of sequences in the concatenated HK-RR protein. First and last are dummies.
 
 	#---------------------------------------------------------------------------------------------------------------------------------------------------------------
     #The second step is to find the name of each sequences. Species are indicated explicitly in the headers, the letters between the first two "|".
@@ -162,7 +162,7 @@ end
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 """
-letter2number is a function that converts an anminoacids letters (an string) into a number from 1 to 21.
+letter2number is a function that converts an anminoacids letters (a string) into a number from 1 to 21.
 """
 
 function letter2number(a::Char)

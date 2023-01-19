@@ -50,8 +50,8 @@ function GA_IPA_DCA_robust(n_replicates::Int64; kNN = 0::Int64, T_0 =1.0::Float6
 
 	#---------------------------------------------------------------------------------------------------------------------------------------------------------------
 	#The first step is to read the dataset. For example the M = 5052 sequences HK-RR dataset.
-
-	protfile = "./Concat_nnn_extrManySeqs_withFirst.fasta"
+	println("Step 1: read the dataset")
+	protfile = "./Concat_nnn_extrManySeqs_withFirst_mini.fasta"
 	La = 64 #La is the number of aminoacids in the HK protein.
     Lb = 112 #Lb is the number of aminoacids in the RR protein.
 	alignA_Num, alignB_Num, dij_A, dij_B, FirstSeqSpec, LastSeqSpec, MSeqSpec, IndexSeqSpec, N, M = datareader(protfile, La, Lb)
@@ -60,7 +60,7 @@ function GA_IPA_DCA_robust(n_replicates::Int64; kNN = 0::Int64, T_0 =1.0::Float6
 
 	#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	#The second step is to compute the weights for graph similarity model: kNN or Orthology.
-
+	println("Step 2: compute the weights for graph similarity model")
 	if kNN == 0#orthology graph (default option)
 		wij_A, wij_B = Orthology_Prop(N, M, MSeqSpec, IndexSeqSpec, FirstSeqSpec, LastSeqSpec, dij_A, dij_B)
 	else#nearest neighbor graph (kNN graph)
@@ -69,7 +69,7 @@ function GA_IPA_DCA_robust(n_replicates::Int64; kNN = 0::Int64, T_0 =1.0::Float6
 
 	#-------------------------------------------------------------------------------------------------------------------------------------------------------
 	#The third step is to loop over the number of replicates.
-
+	println("Step 3.0: loop over the number of replicates")
 	dataTPprotBepi = Array{Float64, 2}(undef, 4 + M, n_replicates)
 	#save the number of sequences in this replicate
 	dataTPprotBepi[1, :] = fill(M, n_replicates)
@@ -77,12 +77,13 @@ function GA_IPA_DCA_robust(n_replicates::Int64; kNN = 0::Int64, T_0 =1.0::Float6
 	dataTPprotBepi[2, :] = fill(M/N, n_replicates)
 
 	Threads.@threads for k in 1:n_replicates
+		println(k)
 		dataTPprotBepi[3:4 + M, k] = SA_replicates(T_0, alpha, n_sweep, M, N, FirstSeqSpec, LastSeqSpec, MSeqSpec, IndexSeqSpec, wij_A, wij_B)
 	end
 
 	#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	#The third.1 step is to save results to file
-
+	println("Step 3.1: save results to file")
 	if kNN == 0#orthology graph (default option)
 		fname = "./HK-RR_GA_Orthology_TP_protB_M=$M._N_sweep=$n_sweep._N_replicates=$n_replicates.text"
 	else#nearest neighbor graph (kNN graph)
@@ -95,12 +96,12 @@ function GA_IPA_DCA_robust(n_replicates::Int64; kNN = 0::Int64, T_0 =1.0::Float6
 
 	#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	#The fourth step is to compute robust pairs and put them in a format that IPA-julia can uses.
-
+	println("Step 4: compute robust pairs and put them in a format that IPA-julia can uses")
 	id_seqs_robust_pairs_without_singletons, id_seqs_no_robust_pairs_without_singletons = robustness_GA_to_IPA(M, n_replicates, dataTPprotBepi[5:4 + M, :], IndexSeqSpec, MSeqSpec, kNN)
 
 	#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	#The fifth step is to run DCA-IPA using GA robust pairs as starting set.
-
+	println("Step 5: run DCA-IPA using GA robust pairs as starting set")
 	DCA_IPA_GA_robust(kNN, Nincrement, sim_threshold, pseudocount_weight, alignA_Num, alignB_Num, dij_A, dij_B, M, La, Lb, id_seqs_robust_pairs_without_singletons, id_seqs_no_robust_pairs_without_singletons, n_replicates)
 
 end
